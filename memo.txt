@@ -1,0 +1,39 @@
+package.json 設定scripts >>>
+# 第一次部署
+npm run deploy
+# 之後每次更新合約
+npm run upgrade
+===================================================
+package.json 未設定scripts >>>
+# 第一次部署
+truffle migrate --network development -f 1 --to 2
+
+# 之後每次更新合約
+truffle migrate --network development -f 3 --to 3
+===================================================
+
+linux當前geth.exe 路徑 >>> CMD >>> geth 啟動 指令
+
+/Ivan/ivan_new$ geth --dev --datadir /home/user/Ivan/ivan_new --http --http.addr 0.0.0.0 --http.port 8545 --http.api "eth,net,web3,miner,admin,txpool,debug" --http.corsdomain "*" --allow-insecure-unlock
+
+===================================================
+安裝metaMask 擴充至Chrome
+新增錢包(測試使用Google登入，其會幫我系統不需要你抄寫 12 個單字，
+因為它把鑰匙碎片加密存在你的 Google 雲端和設備裡了。你只要 Google 登入成功，錢包就會自動打開)
+>>> 增加連線 >>>
+圖metaMask.png 
+>>> 將linux 起的 geth (測試所以很多錢) >>>
+放入 wallet 中使用
+>>> 開啟專案 >>>
+node server.js
+>>>index.html 呼叫 >>>
+當你在 Chrome 安裝了 MetaMask 擴充功能後，MetaMask 就會變成一個幕後間諜（背景腳本）。
+暗中注入：每當你打開任何網頁，MetaMask 就會搶在你的網頁程式碼執行之前，偷偷在瀏覽器的最頂層（window 物件）
+塞進一個叫 ethereum 的 JavaScript 物件。
+如果沒安裝，瀏覽器會回答 undefined（走 else 報錯）。
+if (typeof window.ethereum !== 'undefined')
+===================================================
+
+
+
+

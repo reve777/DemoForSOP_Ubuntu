@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>UserManagement DApp - 權限管理增強版</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #273c75;
+            --secondary: #40739e;
+            --bg: #f5f6fa;
+            --text: #2f3640;
+            --white: #ffffff;
+            --border: #dcdde1;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+            --admin-purple: #8e44ad;
+            --log-color: #2d6a4f;
+        }
+
+        body {
+            font-family: 'Roboto', "Microsoft JhengHei", sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .info-bar {
+            background: var(--white);
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid var(--primary);
+        }
+
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-buttons button {
+            padding: 12px 25px;
+            border-radius: 30px;
+            border: none;
+            background: var(--white);
+            color: var(--secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-buttons button.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(39, 60, 117, 0.3);
+        }
+
+        #btn-admin.active {
+            background: var(--admin-purple);
+        }
+
+        #btn-log.active {
+            background: var(--log-color);
+        }
+
+        .tab-content {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px 30px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group label {
+            flex: 0 0 110px;
+            font-weight: 500;
+            color: #636e72;
+            text-align: right;
+            margin-right: 15px;
+        }
+
+        .input-group input,
+        .input-group select {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            outline: none;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 2;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .clear-btn {
+            flex: 1;
+            background: #f1f2f6;
+            color: #57606f;
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .table-container {
+            background: var(--white);
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f2f6;
+        }
+
+        .status-tag {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .status-0 {
+            background: #e3fcef;
+            color: var(--success);
+        }
+
+        .status-1 {
+            background: #fff4e5;
+            color: var(--warning);
+        }
+
+        .status-2 {
+            background: #ffeaa7;
+            color: var(--danger);
+        }
+
+        /* ★ Log 樣式 */
+        .log-table {
+            min-width: 900px;
+        }
+
+        .action-tag {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .action-0 {
+            background: #e3fcef;
+            color: #00b894;
+        }
+
+        /* Created */
+        .action-1 {
+            background: #dfe6e9;
+            color: #636e72;
+        }
+
+        /* Updated */
+        .action-2 {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        /* Deleted */
+        .action-3 {
+            background: #e8f4fd;
+            color: #0984e3;
+        }
+
+        /* Queried */
+
+        .changed-fields {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .field-tag {
+            background: #f1f2f6;
+            border: 1px solid #b2bec3;
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 0.72rem;
+            color: #2d3436;
+            font-family: monospace;
+        }
+
+        .log-filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .log-filter-bar select,
+        .log-filter-bar input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .log-filter-bar button {
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: none;
+            background: var(--log-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .log-count {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        #log-output {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #636e72;
+            margin-top: 15px;
+            font-family: monospace;
+        }
+
+        .permission-badge {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .addr-short {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #636e72;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>使用者管理系統 (DApp)</h1>
+
+        <div class="info-bar">
+            <div>
+                <strong style="color: var(--primary);">當前帳號：</strong>
+                <span id="display-address">載入中...</span>
+                <span id="auth-status"></span>
+            </div>
+            <div>
+                <strong style="color: var(--primary);">餘額：</strong>
+                <span id="display-balance" style="color: var(--success); font-weight: bold;">0.00</span> ETH
+            </div>
+        </div>
+
+        <div class="tab-buttons">
+            <button id="btn-create" class="active" onclick="switchTab('create')">新增</button>
+            <button id="btn-update" onclick="switchTab('update')">修改</button>
+            <button id="btn-delete" onclick="switchTab('delete')">刪除</button>
+            <button id="btn-admin" onclick="switchTab('admin')">🛡️ 權限設定</button>
+            <button id="btn-log" onclick="switchTab('log')">📋 操作記錄</button>
+        </div>
+
+        <!-- 新增 Tab -->
+        <div id="create" class="tab-content">
+            <div class="form-grid">
+                <div class="input-group"><label>帳號</label><input id="c_account" /></div>
+                <div class="input-group"><label>密碼</label><input id="c_password" type="password" /></div>
+                <div class="input-group"><label>姓名</label><input id="c_name" /></div>
+                <div class="input-group"><label>生日</label><input id="c_birthday" type="date" /></div>
+                <div class="input-group"><label>生肖</label><input id="c_chineseZodiac" /></div>
+                <div class="input-group"><label>部門</label><input id="c_department" /></div>
+                <div class="input-group"><label>組別</label><input id="c_team" /></div>
+                <div class="input-group"><label>帳號生效日</label><input id="c_effective" type="date" /></div>
+                <div class="input-group"><label>帳號停用日</label><input id="c_expiry" type="date" /></div>
+                <div class="input-group"><label>入職日</label><input id="c_hire" type="date" /></div>
+                <div class="input-group"><label>狀態</label>
+                    <select id="c_status">
+                        <option value="0">有效</option>
+                        <option value="1">停用</option>
+                    </select>
+                </div>
+                <div class="input-group full-width"><label>備註</label><input id="c_memo" /></div>
+            </div>
+            <div class="btn-group">
+                <button class="action-btn" onclick="createUser()">確認新增</button>
+                <button class="clear-btn" onclick="clearInputs('c_')">清除</button>
+            </div>
+        </div>
+
+        <!-- 修改 Tab -->
+        <div id="update" class="tab-content" style="display:none;">
+            <div class="form-grid">
+                <div class="input-group"><label>User ID</label><input id="u_id" type="number" readonly
+                        style="background:#f1f2f6;" /></div>
+                <div class="input-group"><label>姓名</label><input id="u_name" /></div>
+                <div class="input-group"><label>生日</label><input id="u_birthday" type="date" /></div>
+                <div class="input-group"><label>生肖</label><input id="u_chineseZodiac" /></div>
+                <div class="input-group"><label>部門</label><input id="u_department" /></div>
+                <div class="input-group"><label>組別</label><input id="u_team" /></div>
+                <div class="input-group"><label>狀態</label>
+                    <select id="u_status">
+                        <option value="0">有效</option>
+                        <option value="1">停用</option>
+                        <option value="2">刪除</option>
+                    </select>
+                </div>
+                <div class="input-group"><label>生效日</label><input id="u_effective" type="date" /></div>
+                <div class="input-group"><label>停用日</label><input id="u_expiry" type="date" /></div>
+                <div class="input-group"><label>入職日</label><input id="u_hire" type="date" /></div>
+                <div class="input-group full-width"><label>備註</label><input id="u_memo" /></div>
+            </div>
+            <div class="btn-group">
+                <button class="action-btn" onclick="updateUser()">確認修改</button>
+                <button class="clear-btn" onclick="clearInputs('u_')">清除</button>
+            </div>
+        </div>
+
+        <!-- 刪除 Tab -->
+        <div id="delete" class="tab-content" style="display:none;">
+            <div class="form-grid">
+                <div class="input-group"><label>User ID</label><input id="d_id" type="number" /></div>
+                <div class="input-group"><label>帳號</label><input id="d_account" placeholder="依帳號刪除用" /></div>
+            </div>
+            <div class="btn-group">
+                <button class="action-btn" onclick="deleteUser()" style="background:var(--danger)">按 ID 刪除</button>
+                <button class="action-btn" onclick="deleteUserByAccount()" style="background:#7f8c8d">按帳號刪除</button>
+            </div>
+        </div>
+
+        <!-- 權限 Tab -->
+        <div id="admin" class="tab-content" style="display:none;">
+            <h3>🛡️ 管理權限控制 (GMR 合約)</h3>
+            <div class="form-grid">
+                <div class="input-group full-width">
+                    <label>管理員地址</label>
+                    <input id="new_admin_address" placeholder="0x..." />
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="action-btn" onclick="handleAddAdmin()"
+                    style="background:var(--admin-purple)">加入白名單</button>
+                <button class="action-btn" onclick="handleRemoveAdmin()" style="background:var(--danger)">移除白名單</button>
+            </div>
+        </div>
+
+        <!-- ★ Log 查詢 Tab -->
+        <div id="log" class="tab-content" style="display:none;">
+            <h3 style="margin-top:0; color: var(--log-color);">📋 操作記錄查詢</h3>
+
+            <div class="log-filter-bar">
+                <label style="font-weight:500;">操作類型</label>
+                <select id="log_action_filter">
+                    <option value="">全部</option>
+                    <option value="0">新增</option>
+                    <option value="1">修改</option>
+                    <option value="2">刪除</option>
+                </select>
+
+                <label style="font-weight:500;">User ID</label>
+                <input id="log_userid_filter" type="number" placeholder="全部" style="width:80px;" />
+
+                <label style="font-weight:500;">操作者地址</label>
+                <input id="log_operator_filter" placeholder="0x... 或留空" style="width:220px;" />
+
+                <button onclick="loadLogs()">🔍 查詢</button>
+                <span class="log-count" id="log_count"></span>
+            </div>
+
+            <div class="table-container">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>時間</th>
+                            <th>操作類型</th>
+                            <th>User ID</th>
+                            <th>帳號</th>
+                            <th>操作者</th>
+                            <th>修改欄位</th>
+                            <th>交易 Hash</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 查詢區 -->
+        <div class="tab-content">
+            <div class="form-grid" style="grid-template-columns: 1.2fr 2fr auto;">
+                <select id="query_type">
+                    <option value="all">查全部</option>
+                    <option value="id">依 ID</option>
+                    <option value="account">依帳號</option>
+                    <option value="department">依部門</option>
+                    <option value="zodiac">依生肖</option>
+                    <option value="status">依狀態</option>
+                    <option value="active">查有效人員</option>
+                </select>
+                <input id="query_input" placeholder="輸入查詢條件..." />
+                <button class="action-btn" onclick="performQuery()">搜尋</button>
+            </div>
+            <div class="table-container" style="margin-top: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>帳號</th>
+                            <th>姓名</th>
+                            <th>生日</th>
+                            <th>生肖</th>
+                            <th>部門/組別</th>
+                            <th>狀態</th>
+                            <th>生效日</th>
+                            <th>停用日</th>
+                            <th>入職日</th>
+                            <th>建立日期</th>
+                            <th>最後修改</th>
+                            <th>備註</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="log-output">初始化中...</div>
+    </div>
+
+    <script>
+        const web3 = new Web3('http://127.0.0.1:8545');
+        let demoContract, gmrContract, account;
+        let currentUser = {};
+        // 純 API 未包含 UI介面，不使用MetaMask
+        //============================================================================================
+        // async function init() {
+        //     const log = document.getElementById('log-output');
+        //     try {
+        //         const response = await fetch('/api/config');
+        //         const config = await response.json();
+
+        //         window.web3 = new Web3(config.RPC_URL);
+        //         const netId = await web3.eth.net.getId();
+
+        //         const demoRes = await fetch('./build/contracts/DEMO.json');
+        //         const demoData = await demoRes.json();
+        //         demoContract = new web3.eth.Contract(demoData.abi, demoData.networks[netId].address);
+
+        //         const gmrRes = await fetch('./build/contracts/GMR.json');
+        //         const gmrData = await gmrRes.json();
+        //         gmrContract = new web3.eth.Contract(gmrData.abi, gmrData.networks[netId].address);
+
+        //         account = web3.eth.accounts.privateKeyToAccount(config.PRIVATE_KEY);
+        //         web3.eth.accounts.wallet.add(account);
+
+        //         log.innerText = '✅ 配置載入成功: ' + account.address;
+        //         await updateAccountDisplay();
+        //         updateAuthUI();
+        //         performQuery();
+        //     } catch (e) {
+        //         log.innerText = '❌ 初始化失敗: ' + e.message;
+        //     }
+        // }
+        //============================================================================================
+        // 當有 UI介面，使用MetaMask
+        async function init() {
+            const log = document.getElementById('log-output');
+            try {
+                // 1. 檢查瀏覽器是否有安裝加密貨幣錢包 (MetaMask)
+                if (typeof window.ethereum !== 'undefined') {
+                    // 使用 window.ethereum 作為 Web3 的 Provider
+                    window.web3 = new Web3(window.ethereum);
+
+                    // 請求使用者授權連接錢包帳號
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    account = { address: accounts[0] }; // 將當前啟用的帳號存起來
+
+                    // 監聽使用者切換錢包帳號
+                    window.ethereum.on('accountsChanged', function (accounts) {
+                        account.address = accounts[0];
+                        updateAccountDisplay();
+                        updateAuthUI();
+                        performQuery();
+                    });
+                } else {
+                    throw new Error('請先安裝 MetaMask 錢包外掛！');
+                }
+
+                const netId = await web3.eth.net.getId();
+
+                // 載入合約
+                const demoRes = await fetch('./build/contracts/DEMO.json');
+                const demoData = await demoRes.json();
+                demoContract = new web3.eth.Contract(demoData.abi, demoData.networks[netId].address);
+
+                const gmrRes = await fetch('./build/contracts/GMR.json');
+                const gmrData = await gmrRes.json();
+                gmrContract = new web3.eth.Contract(gmrData.abi, gmrData.networks[netId].address);
+
+                log.innerText = '✅ 錢包連接成功: ' + account.address;
+                await updateAccountDisplay();
+                updateAuthUI();
+                performQuery();
+            } catch (e) {
+                log.innerText = '❌ 初始化失敗: ' + e.message;
+            }
+        }
+
+
+        async function updateAccountDisplay() {
+            const balance = await web3.eth.getBalance(account.address);
+            document.getElementById('display-address').innerText = account.address;
+            document.getElementById('display-balance').innerText = parseFloat(web3.utils.fromWei(balance, 'ether')).toFixed(4);
+        }
+
+        async function updateAuthUI() {
+            const isAdmin = await gmrContract.methods.authorizedAdmins(account.address).call();
+            const badge = document.getElementById('auth-status');
+            badge.innerHTML = isAdmin
+                ? `<span class="permission-badge" style="background:var(--success); color:white; margin-left:10px;">已授權管理員</span>`
+                : `<span class="permission-badge" style="background:var(--danger); color:white; margin-left:10px;">無權限</span>`;
+            return isAdmin;
+        }
+
+        const getVal = id => document.getElementById(id).value.trim();
+        const getDateVal = id => {
+            const v = getVal(id);
+            return v ? Math.floor(new Date(v).getTime() / 1000) : 0;
+        };
+        const tsToDateInput = ts => {
+            if (!ts || ts == 0) return '';
+            const d = new Date(Number(ts) * 1000);
+            return d.toISOString().slice(0, 10);
+        };
+        const fmtDate = ts => (ts && ts > 0) ? new Date(Number(ts) * 1000).toLocaleDateString('zh-TW') : '-';
+        const fmtDateTime = ts => (ts && ts > 0) ? new Date(Number(ts) * 1000).toLocaleString('zh-TW', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hour12: false
+        }) : '-';
+
+        // CREATE
+        async function createUser() {
+            if (!(await updateAuthUI())) return alert("⛔ 權限不足");
+            try {
+                setLog("⏳ 正在寫入區塊鏈...");
+                const input = {
+                    account: getVal('c_account'),
+                    passwordPlain: getVal('c_password'),
+                    name: getVal('c_name'),
+                    birthday: getDateVal('c_birthday'),
+                    chineseZodiac: getVal('c_chineseZodiac'),
+                    department: getVal('c_department'),
+                    team: getVal('c_team'),
+                    status: Number(getVal('c_status')),
+                    effectiveDate: getDateVal('c_effective'),
+                    expiryDate: getDateVal('c_expiry'),
+                    hireDate: getDateVal('c_hire'),
+                    memo: getVal('c_memo')
+                };
+                //未改為使用metamask
+                // await demoContract.methods.createUser(input).send({ from: account.address, gas: 3000000 });
+                // 改為使用metamask
+                await demoContract.methods.createUser(input).send({ from: account.address });
+                alert("🎉 新增成功");
+                refresh();
+            } catch (e) { alert("失敗: " + e.message); setLog("❌ 操作失敗"); }
+        }
+
+        // UPDATE
+        async function updateUser() {
+            if (!(await updateAuthUI())) return alert("⛔ 權限不足");
+            const id = Number(getVal('u_id'));
+            if (!id) return alert("請先從表格選擇要修改的使用者");
+            const input = {
+                name: getVal('u_name') || currentUser.name || '',
+                birthday: getVal('u_birthday') ? getDateVal('u_birthday') : Number(currentUser.birthday || 0),
+                chineseZodiac: getVal('u_chineseZodiac') || currentUser.chineseZodiac || '',
+                department: getVal('u_department') || currentUser.department || '',
+                team: getVal('u_team') || currentUser.team || '',
+                status: Number(getVal('u_status')),
+                effectiveDate: getVal('u_effective') ? getDateVal('u_effective') : Number(currentUser.effectiveDate || 0),
+                expiryDate: getVal('u_expiry') ? getDateVal('u_expiry') : Number(currentUser.expiryDate || 0),
+                hireDate: getVal('u_hire') ? getDateVal('u_hire') : Number(currentUser.hireDate || 0),
+                memo: getVal('u_memo') !== '' ? getVal('u_memo') : (currentUser.memo || '')
+            };
+            try {
+                setLog("⏳ 正在更新資料...");
+                await demoContract.methods.updateUser(id, input).send({ from: account.address, gas: 3000000 });
+                alert("✅ 修改成功");
+                refresh();
+            } catch (e) {
+                console.error(e);
+                alert("修改失敗: " + e.message);
+                setLog("❌ 操作失敗");
+            }
+        }
+
+        // DELETE by ID
+        async function deleteUser() {
+            if (!(await updateAuthUI())) return alert("⛔ 權限不足");
+            const id = Number(getVal('d_id'));
+            if (!id || id <= 0) return alert("❌ 請輸入要刪除的 User ID 或從表格選擇");
+            if (!confirm(`確定要刪除 User ID ${id} 嗎？`)) return;
+            try {
+                setLog("⏳ 正在刪除使用者...");
+                await demoContract.methods.deleteById(id).send({ from: account.address, gas: 200000 });
+                alert("✅ 使用者已刪除");
+                refresh();
+            } catch (e) {
+                console.error(e);
+                alert("刪除失敗: " + e.message);
+                setLog("❌ 刪除操作失敗");
+            }
+        }
+
+        // DELETE by account
+        async function deleteUserByAccount() {
+            if (!(await updateAuthUI())) return alert("⛔ 權限不足");
+            const acc = getVal('d_account');
+            if (!acc) return alert("❌ 請輸入要刪除的帳號（大小寫需正確）");
+            if (!confirm(`確定要刪除帳號 ${acc} 嗎？`)) return;
+            try {
+                setLog("⏳ 正在刪除使用者...");
+                await demoContract.methods.deleteByAccount(acc).send({ from: account.address, gas: 200000 });
+                alert("✅ 使用者已刪除");
+                refresh();
+            } catch (e) {
+                console.error(e);
+                alert("刪除失敗: " + e.message);
+                setLog("❌ 刪除操作失敗");
+            }
+        }
+
+        // 權限管理
+        async function handleAddAdmin() {
+            try {
+                await gmrContract.methods.addAdmin(getVal('new_admin_address')).send({ from: account.address });
+                alert("已加入白名單"); updateAuthUI(); updateAccountDisplay();
+            } catch (e) { alert("操作失敗: " + e.message); }
+        }
+
+        async function handleRemoveAdmin() {
+            try {
+                await gmrContract.methods.removeAdmin(getVal('new_admin_address')).send({ from: account.address });
+                alert("已移除權限"); updateAuthUI(); updateAccountDisplay();
+            } catch (e) { alert("操作失敗: " + e.message); }
+        }
+
+        // ★ 載入 Log
+        async function loadLogs() {
+            setLog("⏳ 載入操作記錄中...");
+            document.getElementById('log-table-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;">載入中...</td></tr>';
+
+            try {
+                const actionFilter = getVal('log_action_filter');
+                const userIdFilter = getVal('log_userid_filter');
+                const operatorFilter = getVal('log_operator_filter').toLowerCase();
+
+                // 取得 ActionLog events（新增/修改/刪除）
+                const actionLogs = await demoContract.getPastEvents('ActionLog', { fromBlock: 0, toBlock: 'latest' });
+
+                // 取得 UpdateLog events（哪些欄位被改）
+                const updateLogs = await demoContract.getPastEvents('UpdateLog', { fromBlock: 0, toBlock: 'latest' });
+
+                // 建立 UpdateLog 索引：txHash → changedFields
+                const updateLogMap = {};
+                updateLogs.forEach(e => {
+                    updateLogMap[e.transactionHash] = e.returnValues.changedFields;
+                });
+
+                // 篩選
+                let filtered = actionLogs.filter(e => {
+                    const rv = e.returnValues;
+                    if (actionFilter !== '' && String(rv.action) !== actionFilter) return false;
+                    if (userIdFilter && String(rv.userId) !== userIdFilter) return false;
+                    if (operatorFilter && !rv.operator.toLowerCase().includes(operatorFilter)) return false;
+                    return true;
+                });
+
+                // 依時間倒序
+                filtered.sort((a, b) => b.blockNumber - a.blockNumber);
+
+                const actionNames = ['新增', '修改', '刪除', '查詢'];
+                const tbody = document.getElementById('log-table-body');
+                tbody.innerHTML = '';
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;">沒有符合的記錄</td></tr>';
+                    document.getElementById('log_count').innerText = '共 0 筆';
+                    setLog('✅ 查詢完成，無資料');
+                    return;
+                }
+
+                // 取得每筆的 block timestamp
+                const blockNums = [...new Set(filtered.map(e => e.blockNumber))];
+                const blockTimes = {};
+                await Promise.all(blockNums.map(async n => {
+                    const b = await web3.eth.getBlock(n);
+                    blockTimes[n] = b.timestamp;
+                }));
+
+                filtered.forEach(e => {
+                    const rv = e.returnValues;
+                    const action = Number(rv.action);
+                    const ts = blockTimes[e.blockNumber];
+                    const txHash = e.transactionHash;
+                    const shortHash = txHash.slice(0, 10) + '...' + txHash.slice(-6);
+                    const shortOp = rv.operator.slice(0, 8) + '...' + rv.operator.slice(-4);
+
+                    // 修改欄位 tags
+                    let changedFieldsHtml = '-';
+                    if (action === 1 && updateLogMap[txHash]) {
+                        const fields = updateLogMap[txHash].split(',').filter(Boolean);
+                        if (fields.length > 0) {
+                            changedFieldsHtml = `<div class="changed-fields">${fields.map(f => `<span class="field-tag">${f}</span>`).join('')}</div>`;
+                        }
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${fmtDateTime(ts)}</td>
+                        <td><span class="action-tag action-${action}">${actionNames[action] || action}</span></td>
+                        <td><b>${rv.userId}</b></td>
+                        <td>${rv.account || '-'}</td>
+                        <td class="addr-short" title="${rv.operator}">${shortOp}</td>
+                        <td>${changedFieldsHtml}</td>
+                        <td class="addr-short" title="${txHash}">${shortHash}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('log_count').innerText = `共 ${filtered.length} 筆`;
+                setLog('✅ 操作記錄載入完成');
+            } catch (e) {
+                console.error(e);
+                document.getElementById('log-table-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">載入失敗: ' + e.message + '</td></tr>';
+                setLog('❌ 載入失敗: ' + e.message);
+            }
+        }
+
+        // 查詢
+        async function performQuery() {
+            const type = getVal('query_type');
+            const input = getVal('query_input');
+            let res = [];
+            try {
+                if (type === 'all') {
+                    const raw = await demoContract.methods.findAll().call();
+                    res = raw.map((u, i) => ({ ...u, _idx: i + 1 }));
+                } else if (type === 'id') {
+                    const u = await demoContract.methods.getById(Number(input)).call();
+                    res = [{ ...u, _idx: Number(input) }];
+                } else if (type === 'active') {
+                    const raw = await demoContract.methods.findAllActive().call();
+                    const withIds = await Promise.all(raw.map(async u => {
+                        try {
+                            const r = await demoContract.methods.getByAccount(u.account).call();
+                            return { ...u, _idx: Number(r.id) };
+                        } catch { return { ...u, _idx: 0 }; }
+                    }));
+                    res = withIds;
+                } else if (type === 'account') {
+                    const data = await demoContract.methods.getByAccount(input).call();
+                    res = [{ ...data.user, _idx: Number(data.id) }];
+                } else if (type === 'department') {
+                    const raw = await demoContract.methods.getByDepartment(input).call();
+                    const withIds = await Promise.all(raw.map(async u => {
+                        try {
+                            const r = await demoContract.methods.getByAccount(u.account).call();
+                            return { ...u, _idx: Number(r.id) };
+                        } catch { return { ...u, _idx: 0 }; }
+                    }));
+                    res = withIds;
+                } else if (type === 'zodiac') {
+                    const raw = await demoContract.methods.getByChineseZodiac(input).call();
+                    const withIds = await Promise.all(raw.map(async u => {
+                        try {
+                            const r = await demoContract.methods.getByAccount(u.account).call();
+                            return { ...u, _idx: Number(r.id) };
+                        } catch { return { ...u, _idx: 0 }; }
+                    }));
+                    res = withIds;
+                } else if (type === 'status') {
+                    const raw = await demoContract.methods.getByStatus(Number(input)).call();
+                    const withIds = await Promise.all(raw.map(async u => {
+                        try {
+                            const r = await demoContract.methods.getByAccount(u.account).call();
+                            return { ...u, _idx: Number(r.id) };
+                        } catch { return { ...u, _idx: 0 }; }
+                    }));
+                    res = withIds;
+                }
+                renderTable(res);
+            } catch (e) { console.error(e); renderTable([]); }
+        }
+
+        function renderTable(users) {
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = '';
+            const statusMap = ["有效", "停用", "已刪除"];
+            users.forEach(u => {
+                if (!u || !u.account) return;
+                const uid = u._idx || 0;
+                const row = tbody.insertRow();
+                row.onclick = () => autoFill(u, uid);
+                row.innerHTML = `
+                    <td><b>${uid}</b></td>
+                    <td>${u.account}</td>
+                    <td>${u.name}</td>
+                    <td>${fmtDate(u.birthday)}</td>
+                    <td>${u.chineseZodiac || '-'}</td>
+                    <td>${u.department}/${u.team}</td>
+                    <td><span class="status-tag status-${u.status}">${statusMap[u.status]}</span></td>
+                    <td>${fmtDate(u.effectiveDate)}</td>
+                    <td>${fmtDate(u.expiryDate)}</td>
+                    <td>${fmtDate(u.hireDate)}</td>
+                    <td>${fmtDateTime(u.createdAt)}</td>
+                    <td>${fmtDateTime(u.updatedAt)}</td>
+                    <td>${u.memo || '-'}</td>
+                `;
+            });
+        }
+
+        function autoFill(u, id) {
+            currentUser = u;
+            switchTab('update');
+            document.getElementById('u_id').value = id;
+            document.getElementById('u_name').value = u.name || '';
+            document.getElementById('u_birthday').value = tsToDateInput(u.birthday);
+            document.getElementById('u_chineseZodiac').value = u.chineseZodiac || '';
+            document.getElementById('u_department').value = u.department || '';
+            document.getElementById('u_team').value = u.team || '';
+            document.getElementById('u_status').value = u.status;
+            document.getElementById('u_effective').value = tsToDateInput(u.effectiveDate);
+            document.getElementById('u_expiry').value = tsToDateInput(u.expiryDate);
+            document.getElementById('u_hire').value = tsToDateInput(u.hireDate);
+            document.getElementById('u_memo').value = u.memo || '';
+            document.getElementById('d_id').value = id;
+            setLog(`已選取 User ID: ${id}`);
+        }
+
+        function refresh() { updateAccountDisplay(); performQuery(); setLog("✅ 交易已完成並刷新"); }
+        function setLog(msg) { document.getElementById('log-output').innerText = msg; }
+
+        function switchTab(tab) {
+            ['create', 'update', 'delete', 'admin', 'log'].forEach(t => {
+                document.getElementById(t).style.display = t === tab ? 'block' : 'none';
+                document.getElementById('btn-' + t).classList.toggle('active', t === tab);
+            });
+            if (tab === 'log') loadLogs();
+        }
+
+        function clearInputs(prefix) { document.querySelectorAll(`[id^="${prefix}"]`).forEach(i => i.value = ""); }
+
+        init();
+    </script>
+</body>
+
+</html>
