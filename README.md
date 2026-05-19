@@ -28,3 +28,5 @@ RPC_URL：填入你的 Geth 節點連線位置（例如 http://localhost:8545）
 錢包設定：
 在 MetaMask 中「匯入帳戶」，將你的 Geth 創世區塊私鑰 匯入。
 在 MetaMask 中「新增網路」，將 RPC URL 指向你的 Geth 節點位置。
+
+<img  width="100%" src="https://github.com/reve777/DemoForSOP_Ubuntu/blob/main/metaMask.png" />
