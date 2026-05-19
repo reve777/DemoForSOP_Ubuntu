@@ -5,6 +5,9 @@ Ethereum Smart Contract & Node.js DApp Demo
 智能合約語言： Solidity（支援首次部署與合約升級邏輯）
 後端/服務端： Node.js
 前端介面： index.html (由 Node.js 服務驅動)
+測試專案 與 geth 放於相同主機位置 
+--allow-insecure-unlock 啟用原因：Geth 預設禁止透過 HTTP 進行帳戶解鎖，若未開啟此參數，將導致 Node.js API 無法直接調用節點私鑰發送交易，進而引發解鎖失敗錯誤。
+--allow-insecure-unlock 安全限制：此設定會暴露私鑰解鎖的安全性風險，僅限於本機 Linux 開發測試（Localhost Demo）環境使用，嚴禁在正式生產環境中開啟。
 
 🛠 核心功能與開發流程
 1. 智能合約管理 (Solidity)
